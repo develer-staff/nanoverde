@@ -58,7 +58,7 @@ class Led:
 
     def ledErrore(self, sec, count):
         file = open("/sys/class/gpio/pioA26/value", "w")
-        for i in count:
+        for i in range(0, count):
             file.write("1")
             time.sleep(sec)
             file.write("0")
