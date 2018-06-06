@@ -1,12 +1,12 @@
 import string
 import sys
 import binascii
-import serial
+#import serial
 import datetime
 import requests
 import time
 import os
-
+from optparse import OptionParser
 
 class Led:
     def __init__(self):
@@ -72,26 +72,27 @@ def verificaOreRegistrate(user):
     print(user)
     today = datetime.datetime.today()
     oneday = datetime.timedelta(days=4)
-    v = today-oneday  # messo in modo che funzioni dato che oggi non è venerdì e ho bisogno di una settimana lavorativa intera
-    l = v-oneday
-    v = v.strftime("%y-%m-%d")
-    l = l.strftime("%y-%m-%d")
-    slunedi = "20"+str(l)
-    svenerdi = "20"+str(v)
-    print("lunedi: "+slunedi+"venerdi: "+svenerdi)
-    r = requests.get("https://showtime.develer.com/summary/" +
+        day=datetime.timedelta(days=5)                                              
+    v = today-day  # messo in modo che funzioni dato che oggi non e venerdi e ho
+    l = v-oneday                                                                
+    v = v.strftime("%y-%m-%d")                                                  
+    l = l.strftime("%y-%m-%d")                                                  
+    slunedi = "20"+str(l)                                                       
+    svenerdi = "20"+str(v)                                           
+    print("lunedi: "+slunedi+"venerdi: "+svenerdi)                   
+    r = requests.get("https://showtime.develer.com/summary/" +       
                      user+"?from_date="+slunedi+"&to_date="+svenerdi)
-    print(r.json)  # oggetto JSON
-    a = r.json()
-    totaleOre = 0
-    print (a, type(a))
-    for k, v in a.items():
-        v = str(v)
-        v = v.split('.')
-        ore = float(v[1])/60
-        totaleOre = totaleOre+ore+float(v[0])
-    if totaleOre >= 35 and a[svenerdi] >= 6:
-        return True
+    print(r.json)  # oggetto JSON                                    
+    a = r.json()                                                     
+    totaleOre = 0                                                    
+    print (a, type(a))                                               
+    for k, v in a.items():                                  
+        v = str(v)                                                              
+        v = v.split('.')                                                        
+        ore = float(v[1])/60                                                    
+        totaleOre = totaleOre+ore+float(v[0])                                   
+    if totaleOre >= 35 and a[svenerdi] >= 6:                                    
+        return True  
 
     return False
 
@@ -141,26 +142,39 @@ def letturaTag():
             startTag = True
         if c == '\x03':
             break
-    if len(tag) == 16:
+    if len(tag) == 15:
         tag = tag[:10]
         return tag
     return None
 
-
-if __name__ == "__main__":
-    l = Led()
-    utenti_dict = creazioneDizionario("utenti")
-    while True:
-        # if date.today().weekday()==4:     per verificare che sia venerdì, è come commento perchè oggi non è venerdì
-        key = letturaTag()
-        print(key)
-
-        utente = controlloKey(key, utenti_dict)
-        if key is not None:
-            if utente is not None:
-                if premioErogato(utente):
-                    # chiedo al server per sapere se ha registrato le ore
-                    lavoro = verificaOreRegistrate(utente)
-                    if lavoro:
-                        l.erogaCredito()
-                        registraPremioUtente(utente)
+def erogazioneNonVenerdi():                                                     
+    parser=OptionParser()                                                       
+    parser.add_option("-v", action="store_true", dest="value", default=False, he
+    (options, args)=parser.parse_args()                                         
+    return options.value                                                        
+                                                                                
+if __name__ == "__main__":                                                      
+    ven=erogazioneNonVenerdi()                                                  
+    print( ven)                                                                 
+    if (datetime.date.today().weekday()==4 ) or (ven):    #per verificare che si
+        print("puoi eseguire")                                                  
+        l = Led()                                                               
+        utenti_dict = creazioneDizionario("utenti")                             
+        while True:                                                             
+            key = letturaTag()                                                  
+            print(key)                                                          
+                                                                                
+            utente = controlloKey(key, utenti_dict)                             
+            if key is not None:    
+                if utente is not None:                                          
+                    print("codice giusto")                                      
+                    if premioErogato(utente):                                   
+                        print("non hai ancora ritirato il premio")              
+                        # chiedo al server per sapere se ha registrato le ore   
+                        lavoro = verificaOreRegistrate(utente)                  
+                                                                                
+                        if lavoro:                                              
+                            print("hai inserito tutte le ore ")                 
+                            l.erogaCredito(1)                                   
+                            registraPremioUtente(utente)                        
+                            print("RITIRA PREMIO") 
