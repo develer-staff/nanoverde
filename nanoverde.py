@@ -14,32 +14,38 @@ class Led:
             file = open("/sys/class/gpio/export", "w")
             file.write("27")
             file.close()
+        if not os.path.isdir("/sys/class/gpio/pioA26"):
+            file = open("/sys/class/gpio/export", "w")
+            file.write("26")
+            file.close()
 
         file = open("/sys/class/gpio/pioA27/direction", "w")
         file.write("out")
         file.close()
-
         file = open("/sys/class/gpio/pioA27/value", "w")
-        file.write("1")
+        file.write("0")
+        file.close()
+
+        file = open("/sys/class/gpio/pioA26/direction", "w")
+        file.write("out")
+        file.close()
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        file.write("0")
         file.close()
 
     def __del__(self):
         file = open("/sys/class/gpio/pioA27/value", "w")
         file.write("0")
         file.close()
-
         file = open("/sys/class/gpio/unexport", "w")
         file.write("27")
         file.close()
 
-    def onLed(self):
-        file = open("/sys/class/gpio/pioA27/value", "w")
-        file.write("1")
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        file.write("0")
         file.close()
-
-    def offLed(self):
-        file = open("/sys/class/gpio/pioA27/value", "w")
-        file.write("1")
+        file = open("/sys/class/gpio/unexport", "w")
+        file.write("26")
         file.close()
 
     def erogaCredito(self, sec):
@@ -48,6 +54,15 @@ class Led:
         time.sleep(sec)
         file.write("0")
         file.close()
+
+    def ledErrore(self, sec, count):
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        for i in count:
+            file.write("1")
+            time.sleep(sec)
+            file.write("0")
+        file.close()
+
 
 
 def controlloKey(key, utenti_dict):
