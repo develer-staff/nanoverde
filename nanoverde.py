@@ -1,12 +1,13 @@
 import string
 import sys
 import binascii
-#import serial
+import serial
 import datetime
 import requests
 import time
 import os
 from optparse import OptionParser
+from time import strftime
 
 class Led:
     def __init__(self):
@@ -64,7 +65,6 @@ class Led:
         file.close()
 
 
-
 def controlloKey(key, utenti_dict):
     if key in utenti_dict:
         return utenti_dict[key]
@@ -87,7 +87,7 @@ def verificaOreRegistrate(user):
     print(user)
     today = datetime.datetime.today()
     oneday = datetime.timedelta(days=4)
-        day=datetime.timedelta(days=5)                                              
+    day=datetime.timedelta(days=5)                                              
     v = today-day  # messo in modo che funzioni dato che oggi non e venerdi e ho
     l = v-oneday                                                                
     v = v.strftime("%y-%m-%d")                                                  
@@ -162,34 +162,49 @@ def letturaTag():
         return tag
     return None
 
-def erogazioneNonVenerdi():                                                     
-    parser=OptionParser()                                                       
-    parser.add_option("-v", action="store_true", dest="value", default=False, he
-    (options, args)=parser.parse_args()                                         
-    return options.value                                                        
                                                                                 
-if __name__ == "__main__":                                                      
-    ven=erogazioneNonVenerdi()                                                  
-    print( ven)                                                                 
-    if (datetime.date.today().weekday()==4 ) or (ven):    #per verificare che si
+def erogazioneNonVenerdi():                                                  
+    parser=OptionParser()                                                    
+    parser.add_option("-v", action="store_true", dest="value", default=False)
+    (options, args)=parser.parse_args()                                   
+    return options.value                                                  
+                                                                          
+if __name__ == "__main__":                                                
+    ven=erogazioneNonVenerdi()                                       
+    print(ven)                                              
+    timenow=strftime('%H:%M')                                                   
+    l=Led()                                                                     
+    if (datetime.date.today().weekday()==4 and timenow=="18:00") or (ven):      
         print("puoi eseguire")                                                  
-        l = Led()                                                               
-        utenti_dict = creazioneDizionario("utenti")                             
-        while True:                                                             
-            key = letturaTag()                                                  
-            print(key)                                                          
                                                                                 
-            utente = controlloKey(key, utenti_dict)                             
-            if key is not None:    
+        utenti_dict = creazioneDizionario("utenti")                          
+        while True:                                                          
+            key = letturaTag()                                               
+            print(key)     
+
+            utente = controlloKey(key, utenti_dict)                          
+            if key is not None:                                                 
                 if utente is not None:                                          
                     print("codice giusto")                                      
                     if premioErogato(utente):                                   
-                        print("non hai ancora ritirato il premio")              
-                        # chiedo al server per sapere se ha registrato le ore   
-                        lavoro = verificaOreRegistrate(utente)                  
-                                                                                
-                        if lavoro:                                              
-                            print("hai inserito tutte le ore ")                 
-                            l.erogaCredito(1)                                   
-                            registraPremioUtente(utente)                        
-                            print("RITIRA PREMIO") 
+                        print("non hai ancora ritirato il premio")           
+                        # chiedo al server per sapere se ha registrato le ore
+                        lavoro = verificaOreRegistrate(utente)               
+                                                                             
+                        if lavoro:                                           
+                            print("hai inserito tutte le ore ")              
+                            l.erogaCredito(1)                                
+                            registraPremioUtente(utente)                     
+                            print("RITIRA PREMIO")                        
+                        else:                                                   
+                            l.ledErrore(1,2)                                    
+                else:                                                           
+                        l.ledErrore(1,3)                                        
+    else:                                                                       
+        l.ledErrore(1,1)    
+                
+#FUNZIONAMENTO LED:
+#1)tutto bene = led verde
+#2)utente ha gia' ritirato il premio = lampeggia 3 volte led rosso
+#3)ore non corrette = lampeggia 2 volte led ross
+#4)non venerdi', non sono passate le 18 = lampeggia una volta
