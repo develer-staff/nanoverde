@@ -15,44 +15,45 @@ from time import strftime
 import SimpleHTTPServer
 import SocketServer
 
+LED_VERDE="/sys/class/gpio/pioA27"
+LED_ROSSO="/sys/class/gpio/pioA26"
 class Led:
     def __init__(self):
-        if not os.path.isdir("/sys/class/gpio/pioA27"):
+        if not os.path.isdir(LED_VERDE):
             file = open("/sys/class/gpio/export", "w")
             file.write("27")
             file.close()
-        if not os.path.isdir("/sys/class/gpio/pioA26"):
+        if not os.path.isdir(LED_ROSSO):
             file = open("/sys/class/gpio/export", "w")
             file.write("26")
             file.close()
 
-        file = open("/sys/class/gpio/pioA27/direction", "w")
+        file = open(LED_VERDE+ "/direction", "w")
         file.write("out")
         file.close()
-        file = open("/sys/class/gpio/pioA27/value", "w")
+        file = open(LED_ROSSO + "/value", "w")
         file.write("0")
         file.close()
 
-        file = open("/sys/class/gpio/pioA26/direction", "w")
+        file = open(LED_ROSSO + "/direction", "w")
         file.write("out")
         file.close()
-        file = open("/sys/class/gpio/pioA26/value", "w")
+        file = open(LED_ROSSO + "/value", "w")
         file.write("0")
         file.close()
 
-        self.erogaCredito(1)
-        self.ledErrore(1, 10)
+        self.ledStart()
 
 
     def __del__(self):
-        file = open("/sys/class/gpio/pioA27/value", "w")
+        file = open(LED_VERDE + "/value", "w")
         file.write("0")
         file.close()
         file = open("/sys/class/gpio/unexport", "w")
         file.write("27")
         file.close()
 
-        file = open("/sys/class/gpio/pioA26/value", "w")
+        file = open(LED_VERDE + "/value", "w")
         file.write("0")
         file.close()
         file = open("/sys/class/gpio/unexport", "w")
@@ -60,7 +61,7 @@ class Led:
         file.close()
 
     def ledOk(self):
-        file = open("/sys/class/gpio/pioA27/value", "w")
+        file = open(LED_VERDE + "/value", "w")
         file.write("1")
         file.flush()
         time.sleep(1)
@@ -68,7 +69,7 @@ class Led:
         file.close()
 
     def ledRitirato(self):
-        file = open("/sys/class/gpio/pioA26/value", "w")
+        file = open(LED_ROSSO + "/value", "w")
         for i in range(0, 2):
             file.write("1")
             file.flush()
@@ -77,16 +78,16 @@ class Led:
             file.flush()
             time.sleep(0.3)
         file.close()
-        
+
     def ledErrore(self):
-        file = open("/sys/class/gpio/pioA26/value", "w")
+        file = open(LED_ROSSO + "/value", "w")
         file.write("1")
         file.flush()
         time.sleep(0.3)
         file.write("0")
         file.close()
-        
-        file = open("/sys/class/gpio/pioA27/value", "w")
+
+        file = open(LED_ROSSO + "/value", "w")
         file.write("1")
         file.flush()
         time.sleep(0.3)
@@ -94,7 +95,7 @@ class Led:
         file.close()
 
     def ledNoVenerdi(self):
-        file = open("/sys/class/gpio/pioA26/value", "w")
+        file = open(LED_ROSSO + "/value", "w")
         for i in range(0, 3):
             file.write("1")
             file.flush()
@@ -105,11 +106,31 @@ class Led:
         file.close()
 
     def ledNoOre(self):
-        file = open("/sys/class/gpio/pioA26/value", "w")
+        file = open(LED_ROSSO + "/value", "w")
         file.write("1")
         file.flush()
         time.sleep(1.5)
         file.write("0")
+        file.close()
+
+    def ledStart(self):
+        file = open(LED_ROSSO + "/value", "w")
+        for i in range(0, 2):
+            file.write("1")
+            file.flush()
+            time.sleep(1)
+
+            file.write("0")
+            file.flush()
+            time.sleep(0.25)
+
+            file.write("1")
+            file.flush()
+            time.sleep(0.5)
+
+            file.write("0")
+            file.flush()
+            time.sleep(0.5)
         file.close()
 
 
@@ -263,7 +284,7 @@ if __name__ == "__main__":
                             print("Erogato premio a %s" % utente)
                         else:
                             print "%s non ha lavorato abbastanza.." % utente
-                            l.ledNoOre(1,2)
+                            l.ledNoOre()
                     else:
                         print "%s ha già ritirato il premio" % utente
                         l.ledRitirato()
