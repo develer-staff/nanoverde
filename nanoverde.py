@@ -57,69 +57,57 @@ class Led:
         file.write("26")
         file.close()
 
-    def erogaCredito(self, sec):
+    def ledOk(self):
         file = open("/sys/class/gpio/pioA27/value", "w")
         file.write("1")
         file.flush()
-        time.sleep(sec)
+        time.sleep(1)
         file.write("0")
-        file.flush()
-        time.sleep(sec)
-        file.close()
-
-    def ledErrore(self, sec, count):
-        file = open("/sys/class/gpio/pioA26/value", "w")
-        for i in range(0, count):
-            file.write("1")
-            file.flush()
-            time.sleep(sec/2.0)
-            file.write("0")
-            file.flush()
-            time.sleep(sec/2.0)
-        file.close()
-
-    def ledOk(self):
-        file = open("/sys/class/gpio/pioA26/value", "w")
-        for i in range(0, 2):
-            file.write("1")
-            file.flush()
-            time.sleep(sec/2.0)
-            file.write("0")
-            file.flush()
-            time.sleep(sec/2.0)
         file.close()
 
     def ledRitirato(self):
         file = open("/sys/class/gpio/pioA26/value", "w")
-        for i in range(0, count):
+        for i in range(0, 2):
             file.write("1")
             file.flush()
-            time.sleep(sec/2.0)
+            time.sleep(0.7)
             file.write("0")
             file.flush()
-            time.sleep(sec/2.0)
+            time.sleep(0.3)
+        file.close()
+        
+    def ledErrore(self):
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        file.write("1")
+        file.flush()
+        time.sleep(0.3)
+        file.write("0")
+        file.close()
+        
+        file = open("/sys/class/gpio/pioA27/value", "w")
+        file.write("1")
+        file.flush()
+        time.sleep(0.3)
+        file.write("0")
         file.close()
 
-    def ledNoVenerdi(self, sec, count):
+    def ledNoVenerdi(self):
         file = open("/sys/class/gpio/pioA26/value", "w")
-        for i in range(0, count):
+        for i in range(0, 3):
             file.write("1")
             file.flush()
-            time.sleep(sec/2.0)
+            time.sleep(0.3)
             file.write("0")
             file.flush()
-            time.sleep(sec/2.0)
+            time.sleep(0.15)
         file.close()
 
-    def ledNoOre(self, sec, count):
+    def ledNoOre(self):
         file = open("/sys/class/gpio/pioA26/value", "w")
-        for i in range(0, count):
-            file.write("1")
-            file.flush()
-            time.sleep(sec/2.0)
-            file.write("0")
-            file.flush()
-            time.sleep(sec/2.0)
+        file.write("1")
+        file.flush()
+        time.sleep(1.5)
+        file.write("0")
         file.close()
 
 
@@ -256,17 +244,20 @@ if __name__ == "__main__":
                         lavoro = verificaOreRegistrate(utente)
                         if lavoro:
                             print("Ok utente %s, ha inserito le ore!" % utente)
-                            l.erogaCredito(1)
+                            l.ledOk()
                             registraPremioUtente(utente)
                             print("Erogato premio a %s" % utente)
                         else:
                             print "%s non ha lavorato abbastanza.." % utente
-                            l.ledErrore(1,2)
+                            l.ledNoOre(1,2)
+                    else:
+                        print "%s ha già ritirato il premio" % utente
+                        l.ledRitirato()
                 else:
                     print "Tag non nel DB.. %s" % key
-                    l.ledErrore(1,3)
+                    l.ledErrore()
         else:
-            l.ledErrore(1,1)
+            l.ledNoVenerdi()
 
 #FUNZIONAMENTO LED:
 #1)tutto bene = led verde
