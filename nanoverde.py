@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+
 import string
 import sys
 import binascii
@@ -34,6 +38,10 @@ class Led:
         file.write("0")
         file.close()
 
+        self.erogaCredito(1)
+        self.ledErrore(1, 10)
+
+
     def __del__(self):
         file = open("/sys/class/gpio/pioA27/value", "w")
         file.write("0")
@@ -52,16 +60,66 @@ class Led:
     def erogaCredito(self, sec):
         file = open("/sys/class/gpio/pioA27/value", "w")
         file.write("1")
+        file.flush()
         time.sleep(sec)
         file.write("0")
+        file.flush()
+        time.sleep(sec)
         file.close()
 
     def ledErrore(self, sec, count):
         file = open("/sys/class/gpio/pioA26/value", "w")
         for i in range(0, count):
             file.write("1")
-            time.sleep(sec)
+            file.flush()
+            time.sleep(sec/2.0)
             file.write("0")
+            file.flush()
+            time.sleep(sec/2.0)
+        file.close()
+
+    def ledOk(self):
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        for i in range(0, 2):
+            file.write("1")
+            file.flush()
+            time.sleep(sec/2.0)
+            file.write("0")
+            file.flush()
+            time.sleep(sec/2.0)
+        file.close()
+
+    def ledRitirato(self):
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        for i in range(0, count):
+            file.write("1")
+            file.flush()
+            time.sleep(sec/2.0)
+            file.write("0")
+            file.flush()
+            time.sleep(sec/2.0)
+        file.close()
+
+    def ledNoVenerdi(self, sec, count):
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        for i in range(0, count):
+            file.write("1")
+            file.flush()
+            time.sleep(sec/2.0)
+            file.write("0")
+            file.flush()
+            time.sleep(sec/2.0)
+        file.close()
+
+    def ledNoOre(self, sec, count):
+        file = open("/sys/class/gpio/pioA26/value", "w")
+        for i in range(0, count):
+            file.write("1")
+            file.flush()
+            time.sleep(sec/2.0)
+            file.write("0")
+            file.flush()
+            time.sleep(sec/2.0)
         file.close()
 
 
@@ -84,31 +142,39 @@ def premioErogato(key):
 
 
 def verificaOreRegistrate(user):
-    print(user)
+    print("Verifico ore per %s" % user)
     today = datetime.datetime.today()
     oneday = datetime.timedelta(days=4)
-    day=datetime.timedelta(days=5)                                              
+    day=datetime.timedelta(days=5)
     v = today-day  # messo in modo che funzioni dato che oggi non e venerdi e ho
-    l = v-oneday                                                                
-    v = v.strftime("%y-%m-%d")                                                  
-    l = l.strftime("%y-%m-%d")                                                  
-    slunedi = "20"+str(l)                                                       
-    svenerdi = "20"+str(v)                                           
-    print("lunedi: "+slunedi+"venerdi: "+svenerdi)                   
-    r = requests.get("https://showtime.develer.com/summary/" +       
-                     user+"?from_date="+slunedi+"&to_date="+svenerdi)
-    print(r.json)  # oggetto JSON                                    
-    a = r.json()                                                     
-    totaleOre = 0                                                    
-    print (a, type(a))                                               
-    for k, v in a.items():                                  
-        v = str(v)                                                              
-        v = v.split('.')                                                        
-        ore = float(v[1])/60                                                    
-        totaleOre = totaleOre+ore+float(v[0])                                   
-    if totaleOre >= 35 and a[svenerdi] >= 6:                                    
-        return True  
+    l = v-oneday
+    v = v.strftime("%y-%m-%d")
+    l = l.strftime("%y-%m-%d")
+    slunedi = "20"+str(l)
+    svenerdi = "20"+str(v)
+    try:
+        r = requests.get("https://showtime.develer.com/summary/" +
+                         user+"?from_date="+slunedi+"&to_date="+svenerdi)
+    except requests.exceptions.ConnectionError:
+        print "Impossibile contattare il server."
+        return False
 
+    if r.status_code == 200:
+        a = r.json()
+        totaleOre = 0
+        for k, v in a.items():
+            v = str(v)
+            v = v.split('.')
+            ore = float(v[1])/60
+            totaleOre = totaleOre+ore+float(v[0])
+
+        if totaleOre >= 35 and a[svenerdi] >= 6:
+            return True
+
+        print "Ore non sufficienti per %s" % utente
+        return False
+
+    print "Errore nella richiesta al server [%s]" % r.status_code
     return False
 
 
@@ -116,13 +182,13 @@ def registraPremioUtente(user):
     today = datetime.datetime.today()
     today = "20"+today.strftime("%y-%m-%d")
     print("RITIRARE PREMIO")  # EROGAZIONE PREMIO
-    f = open('documento.txt', 'a')
+    f = open('/home/root/documento.txt', 'a')
     f.write(user+';'+str(today)+'\n')
     f.close()
 
 
 def creazioneDizionario(nome):
-    f = open(nome+'.txt', 'r')
+    f = open("/home/root/" + nome+'.txt', 'r')
     utenti_dict = {}
     for line in f:
         line = line.strip()
@@ -162,47 +228,46 @@ def letturaTag():
         return tag
     return None
 
-                                                                                
-def erogazioneNonVenerdi():                                                  
-    parser=OptionParser()                                                    
-    parser.add_option("-v", action="store_true", dest="value", default=False)
-    (options, args)=parser.parse_args()                                   
-    return options.value                                                  
-                                                                          
-if __name__ == "__main__":                                                
-    ven=erogazioneNonVenerdi()                                       
-    print(ven)                                              
-    timenow=strftime('%H:%M')                                                   
-    l=Led()                                                                     
-    if (datetime.date.today().weekday()==4 and timenow=="18:00") or (ven):      
-        print("puoi eseguire")                                                  
-                                                                                
-        utenti_dict = creazioneDizionario("utenti")                          
-        while True:                                                          
-            key = letturaTag()                                               
-            print(key)     
 
-            utente = controlloKey(key, utenti_dict)                          
-            if key is not None:                                                 
-                if utente is not None:                                          
-                    print("codice giusto")                                      
-                    if premioErogato(utente):                                   
-                        print("non hai ancora ritirato il premio")           
+    return options.value
+
+if __name__ == "__main__":
+    parser=OptionParser()
+    parser.add_option("-v", action="store_true", dest="venerdi", default=False)
+    (options, args)=parser.parse_args()
+
+    l=Led()
+    utenti_dict = creazioneDizionario("utenti")
+    while True:
+        sys.stdout.flush()
+        sys.stderr.write("prova\n")
+        timenow=strftime('%H:%M')
+        if (datetime.date.today().weekday()==4 and timenow=="18:00") or (options.venerdi):
+            print "Oggi è venerdi prova a ritirare il premio.."
+            key = letturaTag()
+            print("Tag: %s" % key)
+            utente = controlloKey(key, utenti_dict)
+            if key is not None:
+                if utente is not None:
+                    print("Tag Trovato!")
+                    if premioErogato(utente):
+                        print("Utente abilitato al ritirato il premio")
                         # chiedo al server per sapere se ha registrato le ore
-                        lavoro = verificaOreRegistrate(utente)               
-                                                                             
-                        if lavoro:                                           
-                            print("hai inserito tutte le ore ")              
-                            l.erogaCredito(1)                                
-                            registraPremioUtente(utente)                     
-                            print("RITIRA PREMIO")                        
-                        else:                                                   
-                            l.ledErrore(1,2)                                    
-                else:                                                           
-                        l.ledErrore(1,3)                                        
-    else:                                                                       
-        l.ledErrore(1,1)    
-                
+                        lavoro = verificaOreRegistrate(utente)
+                        if lavoro:
+                            print("Ok utente %s, ha inserito le ore!" % utente)
+                            l.erogaCredito(1)
+                            registraPremioUtente(utente)
+                            print("Erogato premio a %s" % utente)
+                        else:
+                            print "%s non ha lavorato abbastanza.." % utente
+                            l.ledErrore(1,2)
+                else:
+                    print "Tag non nel DB.. %s" % key
+                    l.ledErrore(1,3)
+        else:
+            l.ledErrore(1,1)
+
 #FUNZIONAMENTO LED:
 #1)tutto bene = led verde
 #2)utente ha gia' ritirato il premio = lampeggia 3 volte led rosso
