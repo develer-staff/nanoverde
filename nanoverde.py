@@ -12,6 +12,8 @@ import time
 import os
 from optparse import OptionParser
 from time import strftime
+import SimpleHTTPServer
+import SocketServer
 
 class Led:
     def __init__(self):
@@ -219,6 +221,16 @@ def letturaTag():
 
     return options.value
 
+def server():
+    PORT = 8800
+
+    Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+
+    httpd = SocketServer.TCPServer(("", PORT), Handler)
+    
+    httpd.serve_forever()
+    
+    
 if __name__ == "__main__":
     parser=OptionParser()
     parser.add_option("-v", action="store_true", dest="venerdi", default=False)
