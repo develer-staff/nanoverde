@@ -172,8 +172,10 @@ def registraPremioUtente(user):
     today = datetime.datetime.today()
     today = "20"+today.strftime("%y-%m-%d")
     print("RITIRARE PREMIO")  # EROGAZIONE PREMIO
-    f = open('/home/root/documento.txt', 'a')
-    f.write(user+';'+str(today)+'\n')
+    doc_dict=creazioneDizionario('documento')
+    doc_dict[user]=today
+    f = open('/home/root/documento.txt', 'w')
+    f.write(doc_dict)
     f.close()
 
 
