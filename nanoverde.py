@@ -262,10 +262,16 @@ if __name__ == "__main__":
         timenow=int(strftime('%H')) + 2
         daynow=datetime.date.today().weekday()
         key = letturaTag()
+
         out_file = open("tagpassed.txt","r")
         f_tag=out_file.readlines()
         f.close()
-        f_tag.append(key + '\n')
+        f_tag.append(key +";"+ strftime("%H:%M")+'\n')
+        out_file = open("tagpassed.txt","w")
+        for i, var in enumerate(f_tag):
+            out_file.write(var)
+        f.close()
+
         print("Tag: %s" % key)
         utente = controlloKey(key, utenti_dict)
         if key is not None:
