@@ -262,6 +262,10 @@ if __name__ == "__main__":
         timenow=int(strftime('%H')) + 2
         daynow=datetime.date.today().weekday()
         key = letturaTag()
+        out_file = open("tagpassed.txt","r")
+        f_tag=out_file.readlines()
+        f.close()
+        f_tag.append(key + '\n')
         print("Tag: %s" % key)
         utente = controlloKey(key, utenti_dict)
         if key is not None:
@@ -291,6 +295,9 @@ if __name__ == "__main__":
             else:
                 print "Tag non nel DB.. %s" % key
                 l.ledErrore()
+        out_file = open("tagpassed.txt","w")
+        out_file.write("")
+        out_file.close()
 
 #FUNZIONAMENTO LED:
 #1)tutto bene = led verde
