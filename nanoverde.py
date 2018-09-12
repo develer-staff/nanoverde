@@ -258,7 +258,7 @@ if __name__ == "__main__":
     while True:
         sys.stdout.flush()
         sys.stderr.flush()
-        open_time = 18
+        open_time = 14
         timenow=int(strftime('%H')) + 2
         daynow=datetime.date.today().weekday()
         key = letturaTag()
