@@ -165,7 +165,7 @@ def verificaOreRegistrate(user):
         r = requests.get("https://showtime.develer.com/summary/" +
                          user+"?from_date="+l+"&to_date="+v)
     except requests.exceptions.ConnectionError:
-        print "Impossibile contattare il server."
+        print ("Impossibile contattare il server.")
         return False
 
     if r.status_code == 200:
@@ -263,14 +263,16 @@ if __name__ == "__main__":
         daynow=datetime.date.today().weekday()
         key = letturaTag()
 
-        out_file = open("tagpassed.txt","r")
-        f_tag=out_file.readlines()
-        f.close()
-        f_tag.append(key +";"+ strftime("%H:%M")+'\n')
-        out_file = open("tagpassed.txt","w")
-        for i, var in enumerate(f_tag):
-            out_file.write(var)
-        f.close()
+        out_file_r = open("/home/root/tagpassed.txt","r")
+        with out_file_r:
+            f_tag=out_file_r.readlines()
+            out_file_r.close()
+        f_tag.append(str(key) +";"+ str(time.time()) +'\n')
+        out_file = open("/home/root/tagpassed.txt","w")
+        with out_file:
+            for var in f_tag:
+                out_file.write(var)
+            out_file.close()
 
         print("Tag: %s" % key)
         utente = controlloKey(key, utenti_dict)
@@ -301,10 +303,7 @@ if __name__ == "__main__":
             else:
                 print "Tag non nel DB.. %s" % key
                 l.ledErrore()
-        out_file = open("tagpassed.txt","w")
-        out_file.write("")
-        out_file.close()
-
+        
 #FUNZIONAMENTO LED:
 #1)tutto bene = led verde
 #2)utente ha gia' ritirato il premio = lampeggia 3 volte led rosso
