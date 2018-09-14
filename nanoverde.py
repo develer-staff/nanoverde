@@ -247,6 +247,10 @@ def letturaTag():
     return options.value
 
 if __name__ == "__main__":
+    with open("/home/root/tagpassed.txt", "w") as f:
+        f.write("")
+        f.close
+
     parser=OptionParser()
     parser.add_option("-v", action="store_true", dest="venerdi", default=False)
     (options, args)=parser.parse_args()
