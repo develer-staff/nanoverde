@@ -249,7 +249,7 @@ def letturaTag():
 if __name__ == "__main__":
     with open("/home/root/tagpassed.txt", "w") as f:
         f.write("")
-        f.close
+        f.close()
 
     parser=OptionParser()
     parser.add_option("-v", action="store_true", dest="venerdi", default=False)
@@ -257,9 +257,10 @@ if __name__ == "__main__":
 
     print "Abilito led"
     l=Led()
-    print "Leggo dizionario utenti."
-    utenti_dict = creazioneDizionario("utenti")
+    
     while True:
+        print "Leggo dizionario utenti."
+        utenti_dict = creazioneDizionario("utenti")
         sys.stdout.flush()
         sys.stderr.flush()
         open_time = 14
@@ -267,22 +268,25 @@ if __name__ == "__main__":
         daynow=datetime.date.today().weekday()
         key = letturaTag()
 
-        out_file_r = open("/home/root/tagpassed.txt","r")
-        with out_file_r:
-            f_tag=out_file_r.readlines()
-            out_file_r.close()
-        f_tag.append(str(key) +";"+ str(time.time()) +'\n')
-        out_file = open("/home/root/tagpassed.txt","w")
-        with out_file:
-            for var in f_tag:
-                out_file.write(var)
-            out_file.close()
-
         print("Tag: %s" % key)
         utente = controlloKey(key, utenti_dict)
+        msg = ""
         if key is not None:
+
+            out_file_r = open("/home/root/tagpassed.txt","r")
+            with out_file_r:
+                f_tag=out_file_r.readlines()
+                out_file_r.close()
+            f_tag.append(str(key) +";"+ str(time.time()) +'\n')
+            out_file = open("/home/root/tagpassed.txt","w")
+            with out_file:
+                for var in f_tag:
+                    out_file.write(var)
+                out_file.close()
+            print ( "il codice è "+ key)
+
             if utente is not None:
-                print("Tag Trovato!")
+                print("Tag Trovato!" + utente)
                 #if (daynow==4 and timenow>=open_time) or utente == "test":
                 if (daynow==4) or utente == "test":
                     print "Oggi è venerdi prova a ritirare il premio.."
@@ -294,19 +298,35 @@ if __name__ == "__main__":
                             print("Ok utente %s, ha inserito le ore!" % utente)
                             l.ledOk()
                             registraPremioUtente(utente)
+                            msg = "%s;erogato" % utente
                             print("Erogato premio a %s" % utente)
                         else:
+                            msg = "%s;ore" % utente
                             print "%s non ha lavorato abbastanza.." % utente
                             l.ledNoOre()
                     else:
+                        msg = "%s;premio" % utente
                         print "%s ha già ritirato il premio" % utente
                         l.ledRitirato()
                 else:
+                    msg = "%s;chiuso" % utente
                     print "%s distributore non abilitato giorno:%s!=%s ora:%s!=%s" % (utente, daynow, 4, timenow, open_time)
                     l.ledNoVenerdi()
             else:
+                msg = "%s;tag" % utente
                 print "Tag non nel DB.. %s" % key
                 l.ledErrore()
+
+            out_file_r = open("/home/root/tagpassed.txt","r")
+            with out_file_r:
+                f_tag=out_file_r.readlines()
+                out_file_r.close()
+            f_tag.append(msg+ ";"+ str(time.time())+ ";" + key + "\n")
+            out_file = open("/home/root/tagpassed.txt","w")
+            with out_file:
+                for var in f_tag:
+                    out_file.write(var)
+                out_file.close()
         
 #FUNZIONAMENTO LED:
 #1)tutto bene = led verde
